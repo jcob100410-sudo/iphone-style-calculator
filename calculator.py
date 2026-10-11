@@ -1,6 +1,5 @@
 import re
 import tkinter as tk
-from tkinter import font
 
 
 class iPhoneCalculator(tk.Tk):
@@ -13,32 +12,33 @@ class iPhoneCalculator(tk.Tk):
 
         self.expression = ""
         self.display_value = tk.StringVar(value="0")
+        self.just_evaluated = False
 
-        self._build_display()
-        self._build_buttons()
+        self.build_display()
+        self.build_buttons()
 
-    def _build_display(self):
+    def build_display(self):
         display_frame = tk.Frame(self, bg="#000000")
-        display_frame.pack(fill="x", expand=True, padx=18, pady=(20, 10))
+        display_frame.pack(fill="both", expand=True, padx=18, pady=(30, 10))
 
-        self.display = tk.Label(
+        self.display_label = tk.Label(
             display_frame,
             textvariable=self.display_value,
             bg="#000000",
             fg="#FFFFFF",
             anchor="e",
             justify="right",
-            font=("SF Pro Display", 64, "normal"),
-            padx=10,
-            pady=30,
+            font=("SF Pro Display", 70, "normal"),
+            padx=12,
+            pady=10,
         )
-        self.display.pack(fill="both", expand=True)
+        self.display_label.pack(fill="both", expand=True)
 
-    def _build_buttons(self):
+    def build_buttons(self):
         button_frame = tk.Frame(self, bg="#000000")
         button_frame.pack(fill="both", expand=True, padx=12, pady=(0, 16))
 
-        button_specs = [
+        specs = [
             ["C", "±", "%", "÷"],
             ["7", "8", "9", "×"],
             ["4", "5", "6", "−"],
@@ -46,83 +46,64 @@ class iPhoneCalculator(tk.Tk):
             ["0", ".", "="],
         ]
 
-        for row_index, row in enumerate(button_specs):
-            for col_index, symbol in enumerate(row):
+        for row, values in enumerate(specs):
+            for col, symbol in enumerate(values):
                 if symbol == "0":
-                    btn = tk.Button(
-                        button_frame,
-                        text=symbol,
-                        width=2,
-                        height=1,
-                        bg="#333333",
-                        fg="#FFFFFF",
-                        font=("SF Pro Display", 32, "normal"),
-                        relief="flat",
-                        borderwidth=0,
-                        activebackground="#4d4d4d",
-                        activeforeground="#FFFFFF",
-                        highlightthickness=0,
-                        command=lambda s=symbol: self.handle_button(s),
-                    )
-                    btn.grid(row=row_index, column=0, columnspan=2, sticky="nsew", padx=6, pady=8)
+                    btn = self.make_button(symbol, row, col, 2, 1)
+                    btn.grid(row=row, column=0, columnspan=2, sticky="nsew", padx=8, pady=8)
                 elif symbol == "=":
-                    btn = tk.Button(
-                        button_frame,
-                        text=symbol,
-                        width=2,
-                        height=1,
-                        bg="#FF9F0A",
-                        fg="#FFFFFF",
-                        font=("SF Pro Display", 32, "normal"),
-                        relief="flat",
-                        borderwidth=0,
-                        activebackground="#ffb340",
-                        activeforeground="#FFFFFF",
-                        highlightthickness=0,
-                        command=lambda s=symbol: self.handle_button(s),
-                    )
-                    btn.grid(row=4, column=2, columnspan=2, sticky="nsew", padx=6, pady=8)
+                    btn = self.make_button(symbol, row, col, 1, 1)
+                    btn.grid(row=row, column=3, sticky="nsew", padx=8, pady=8)
                 else:
-                    if symbol in ["C", "±", "%"]:
-                        bg = "#A5A5A5"
-                        fg = "#000000"
-                        active_bg = "#d9d9d9"
-                    elif symbol in ["+", "−", "×", "÷"]:
-                        bg = "#FF9F0A"
-                        fg = "#FFFFFF"
-                        active_bg = "#ffb340"
-                    else:
-                        bg = "#333333"
-                        fg = "#FFFFFF"
-                        active_bg = "#4d4d4d"
+                    btn = self.make_button(symbol, row, col, 1, 1)
+                    btn.grid(row=row, column=col, sticky="nsew", padx=8, pady=8)
 
-                    btn = tk.Button(
-                        button_frame,
-                        text=symbol,
-                        width=2,
-                        height=1,
-                        bg=bg,
-                        fg=fg,
-                        font=("SF Pro Display", 32, "normal"),
-                        relief="flat",
-                        borderwidth=0,
-                        activebackground=active_bg,
-                        activeforeground=fg,
-                        highlightthickness=0,
-                        command=lambda s=symbol: self.handle_button(s),
-                    )
-                    btn.grid(row=row_index, column=col_index if symbol != "0" else 0, sticky="nsew", padx=6, pady=8)
+        for c in range(4):
+            button_frame.grid_columnconfigure(c, weight=1)
+        for r in range(5):
+            button_frame.grid_rowconfigure(r, weight=1)
 
-        for col in range(4):
-            button_frame.grid_columnconfigure(col, weight=1)
-        for row in range(5):
-            button_frame.grid_rowconfigure(row, weight=1)
+    def make_button(self, symbol, row, col, colspan, rowspan):
+        if symbol in ["C", "±", "%"]:
+            bg = "#A5A5A5"
+            fg = "#000000"
+            active = "#D9D9D9"
+        elif symbol in ["+", "−", "×", "÷"]:
+            bg = "#FF9F0A"
+            fg = "#FFFFFF"
+            active = "#FFB447"
+        elif symbol == "=":
+            bg = "#FF9F0A"
+            fg = "#FFFFFF"
+            active = "#FFB447"
+        else:
+            bg = "#333333"
+            fg = "#FFFFFF"
+            active = "#4D4D4D"
+
+        btn = tk.Button(
+            self.winfo_children()[-1] if False else self,
+            text=symbol,
+            width=2,
+            height=2,
+            bg=bg,
+            fg=fg,
+            font=("SF Pro Display", 32, "normal"),
+            relief="flat",
+            borderwidth=0,
+            highlightthickness=0,
+            activebackground=active,
+            activeforeground=fg,
+            command=lambda s=symbol: self.handle_button(s),
+        )
+
+        return btn
 
     def handle_button(self, symbol):
         if symbol.isdigit() or symbol == ".":
-            self.append_digit(symbol)
+            self.input_digit(symbol)
         elif symbol in ["+", "−", "×", "÷"]:
-            self.append_operator(symbol)
+            self.input_operator(symbol)
         elif symbol == "C":
             self.clear_all()
         elif symbol == "±":
@@ -132,62 +113,71 @@ class iPhoneCalculator(tk.Tk):
         elif symbol == "=":
             self.evaluate()
 
-    def append_digit(self, symbol):
+    def input_digit(self, symbol):
+        if self.just_evaluated:
+            self.expression = ""
+            self.just_evaluated = False
+
         if self.display_value.get() == "Error":
             self.expression = ""
             self.display_value.set("0")
 
         if symbol == ".":
-            current_number = self._current_number()
+            current_number = self.current_number()
             if "." in current_number:
                 return
-            if self.expression == "" or self.expression[-1] in ["+", "−", "×", "÷"]:
+            if not self.expression or self.expression[-1] in ["+", "−", "×", "÷"]:
                 self.expression += "0."
             else:
                 self.expression += "."
         else:
             self.expression += symbol
 
-        self.display_value.set(self._format_display(self.expression))
+        self.sync_display()
 
-    def append_operator(self, symbol):
-        if self.expression == "":
-            if symbol == "−":
+    def input_operator(self, op):
+        if self.display_value.get() == "Error":
+            self.expression = ""
+            self.display_value.set("0")
+            return
+
+        if not self.expression:
+            if op == "−":
                 self.expression = "−"
-                self.display_value.set("−")
+            self.sync_display()
             return
 
         if self.expression[-1] in ["+", "−", "×", "÷"]:
-            self.expression = self.expression[:-1] + symbol
+            self.expression = self.expression[:-1] + op
         else:
-            self.expression += symbol
+            self.expression += op
 
-        self.display_value.set(self._format_display(self.expression))
+        self.just_evaluated = False
+        self.sync_display()
 
     def clear_all(self):
         self.expression = ""
+        self.just_evaluated = False
         self.display_value.set("0")
 
     def toggle_sign(self):
         if not self.expression:
             return
-
         if self.expression.startswith("−"):
             self.expression = self.expression[1:]
         else:
             self.expression = "−" + self.expression
-
-        self.display_value.set(self._format_display(self.expression))
+        self.sync_display()
 
     def apply_percent(self):
         if not self.expression:
             return
-
         try:
-            value = self.evaluate_expression(self.expression)
+            value = self.calculate_expression(self.expression)
             result = value / 100
             self.expression = str(result)
-            self.display_value.set(self._format_display(self.expression))
+            self.just_evaluated = True
+            self.sync_display()
         except Exception:
             self.expression = ""
             self.display_value.set("Error")
@@ -195,41 +185,33 @@ class iPhoneCalculator(tk.Tk):
     def evaluate(self):
         if not self.expression:
             return
-
         try:
-            result = self.evaluate_expression(self.expression)
+            result = self.calculate_expression(self.expression)
             if isinstance(result, float):
                 if result.is_integer():
                     result = int(result)
                 else:
                     result = round(result, 10)
             self.expression = str(result)
-            self.display_value.set(self._format_display(self.expression))
+            self.just_evaluated = True
+            self.sync_display()
         except Exception:
             self.expression = ""
             self.display_value.set("Error")
 
-    def _current_number(self):
+    @property
+    def current_number(self):
         if not self.expression:
             return ""
         return re.split(r"[+\-×÷]", self.expression)[-1]
 
-    def _format_display(self, value):
-        if value == "":
-            return "0"
-        if value == "Error":
-            return "Error"
+    def sync_display(self):
+        value = self.expression if self.expression else "0"
+        self.display_value.set(value)
 
-        try:
-            if float(value) == float(int(float(value))):
-                return str(int(float(value)))
-            return str(float(value))
-        except Exception:
-            return value
-
-    def evaluate_expression(self, expression):
-        safe_expression = expression.replace("×", "*").replace("÷", "/").replace("−", "-")
-        return eval(safe_expression, {"__builtins__": {}}, {})
+    def calculate_expression(self, expression):
+        expr = expression.replace("×", "*").replace("÷", "/").replace("−", "-")
+        return eval(expr, {"__builtins__": {}}, {})
 
 
 if __name__ == "__main__":
